@@ -44,4 +44,34 @@ var _ = Describe("Client", func() {
 			})
 		})
 	})
+
+	var (
+		appClient  *client.MyApplicationClient
+		httpClient *clientfakes.FakeMyHttpClient
+	)
+
+	BeforeEach(func() {
+		httpClient = &clientfakes.FakeMyHttpClient{}
+		appClient = client.NewApplicationClient(httpClient)
+
+		httpClient.DoReturns(&http.Response{}, nil)
+	})
+
+	Describe("PerformQuery", func() {
+		It("Executes and returns nil", func() {
+			Expect(appClient.PerformQuery()).NotTo(HaveOccurred())
+		})
+
+		Context("When we get a 401", func() {
+			JustBeforeEach(func() {
+				httpClient.DoReturns(&http.Response{
+					StatusCode: http.StatusUnauthorized,
+				}, nil)
+			})
+
+			It("Returns an error", func() {
+				Expect(appClient.PerformQuery()).To(HaveOccurred())
+			})
+		})
+	})
 })
